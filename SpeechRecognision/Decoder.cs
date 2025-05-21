@@ -10,9 +10,17 @@ namespace SpeechRecognision
     {
         public static Dictionary<String, String> wordToCode = new Dictionary<string, string> { };
 
-        public static string decode(String input)
+        List sortedKeys = new List<String>();
+
+        public static string decode(string input)
         {
-            foreach (String key in wordToCode.Keys)
+            // Сортируем ключи по убыванию длины
+            if (sortedKeys.Count == 0 || sortedKeys.Count != wordToCode.Keys.Count)
+            { 
+                sortedKeys = wordToCode.Keys.OrderByDescending(k => k.Length);
+            }
+
+            foreach (string key in sortedKeys)
             {
                 if (input.Contains(key))
                 {
@@ -21,5 +29,6 @@ namespace SpeechRecognision
             }
             return input;
         }
+
     }
 }
