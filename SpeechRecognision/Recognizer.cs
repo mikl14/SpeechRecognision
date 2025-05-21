@@ -40,7 +40,7 @@ namespace SpeechRecognision
             Decoder.wordToCode = keyValues;
         }
 
-        void setDeviceNumber(int number)
+        public void setDeviceNumber(int number)
         {
             waveIn.DeviceNumber = number;
         }
