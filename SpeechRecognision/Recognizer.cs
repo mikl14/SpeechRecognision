@@ -40,6 +40,11 @@ namespace SpeechRecognision
             Decoder.wordToCode = keyValues;
         }
 
+        void setDeviceNumber(int number)
+        {
+            waveIn.DeviceNumber = number;
+        }
+
         private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
             if (recognizer.AcceptWaveform(e.Buffer, e.BytesRecorded))
