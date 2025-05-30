@@ -12,12 +12,11 @@ namespace SpeechRecognision
 {
     public class Recognizer
     {
-        private WaveInEvent waveIn;
+        private static WaveInEvent waveIn;
         private VoskRecognizer recognizer;
         private Model model;
         private bool enableRusNumbers, enableWordToCode;
 
-        private string lastResult = "";
 
         public Recognizer(String modelPath, bool enableRusNumbers = false, bool enableWordToCode = false)
         {
@@ -40,7 +39,7 @@ namespace SpeechRecognision
             Decoder.wordToCode = keyValues;
         }
 
-        public void setDeviceNumber(int number)
+        public static void setDeviceNumber(int number)
         {
             waveIn.DeviceNumber = number;
         }
@@ -50,7 +49,7 @@ namespace SpeechRecognision
             if (recognizer.AcceptWaveform(e.Buffer, e.BytesRecorded))
             {
                 var result = RemoveSpecialCharactersExceptSpaces(recognizer.Result());
-                lastResult = result; // сохраняем результат в поле класса
+            
 
                 if (enableRusNumbers)
                 {
@@ -97,9 +96,22 @@ namespace SpeechRecognision
 
         private void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
         {
-            recognizer?.Dispose();
-            model?.Dispose();
-            waveIn?.Dispose();
+        }
+
+        public static List<String> getDevices()
+        {
+            int deviceCount = WaveIn.DeviceCount;
+
+            List<String> devices = new List<String>();
+
+            for (int i = 0; i < deviceCount; i++)
+            {
+                var deviceInfo = WaveIn.GetCapabilities(i);
+                devices.Add(deviceInfo.ProductName);
+                //Console.WriteLine($"Устройство {i}: {deviceInfo.ProductName}, каналы: {deviceInfo.Channels}");
+            }
+
+            return devices;
         }
 
         public void stopRecording()

@@ -68,97 +68,97 @@ namespace SpeechRecognision
             {"миллионов", 1000000}
         };
 
-            /// <summary>
-            /// Основной метод парсинга русских числительных в число double.
-            /// Поддерживает целую и дробную часть через слово "целая".
-            /// </summary>
+        /// <summary>
+        /// Основной метод парсинга русских числительных в число double.
+        /// Поддерживает целую и дробную часть через слово "целая".
+        /// </summary>
         public static double Parse(string input)
         {
-                if (string.IsNullOrWhiteSpace(input))
-                    throw new ArgumentException("Строка не может быть пустой");
+            if (string.IsNullOrWhiteSpace(input))
+                throw new ArgumentException("Строка не может быть пустой");
 
-                input = input.ToLowerInvariant().Replace("-", " ").Replace(" и ", " ");
-                var parts = input.Split(new[] { "целая" }, StringSplitOptions.RemoveEmptyEntries);
+            input = input.ToLowerInvariant().Replace("-", " ").Replace(" и ", " ");
+            var parts = input.Split(new[] { "целая" }, StringSplitOptions.RemoveEmptyEntries);
 
-                double integerPart = ParseIntegerPart(parts[0].Trim());
+            double integerPart = ParseIntegerPart(parts[0].Trim());
 
-                if (parts.Length == 1)
-                    return integerPart;
+            if (parts.Length == 1)
+                return integerPart;
 
-                // Парсим дробную часть - считаем каждое слово как цифру после запятой
-                string fractionalPartStr = parts[1].Trim();
-                // Преобразуем слова дробной части в цифры
-                string fractionalDigits = "";
+            // Парсим дробную часть - считаем каждое слово как цифру после запятой
+            string fractionalPartStr = parts[1].Trim();
+            // Преобразуем слова дробной части в цифры
+            string fractionalDigits = "";
 
-                var fractionalWords = fractionalPartStr.Split(new[] { ' ', ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
+            var fractionalWords = fractionalPartStr.Split(new[] { ' ', ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (var word in fractionalWords)
+            foreach (var word in fractionalWords)
+            {
+                if (Units.TryGetValue(word, out long digit) && digit >= 0 && digit <= 9)
                 {
-                    if (Units.TryGetValue(word, out long digit) && digit >= 0 && digit <= 9)
-                    {
-                        fractionalDigits += digit.ToString();
-                    }
-                    else if (long.TryParse(word, out long numericDigit) && numericDigit >= 0 && numericDigit <= 9)
-                    {
-                        fractionalDigits += numericDigit.ToString();
-                    }
-                    else
-                    {
-                        // Если встретили неизвестное слово - можно выбросить исключение или игнорировать
-                        throw new FormatException($"Не удалось распознать слово '{word}' в дробной части");
-                    }
+                    fractionalDigits += digit.ToString();
                 }
+                else if (long.TryParse(word, out long numericDigit) && numericDigit >= 0 && numericDigit <= 9)
+                {
+                    fractionalDigits += numericDigit.ToString();
+                }
+                else
+                {
+                    // Если встретили неизвестное слово - можно выбросить исключение или игнорировать
+                    throw new FormatException($"Не удалось распознать слово '{word}' в дробной части");
+                }
+            }
 
-                if (fractionalDigits.Length == 0)
-                    return integerPart;
+            if (fractionalDigits.Length == 0)
+                return integerPart;
 
-                double fractionalPart = double.Parse("0." + fractionalDigits, CultureInfo.InvariantCulture);
+            double fractionalPart = double.Parse("0." + fractionalDigits, CultureInfo.InvariantCulture);
 
-                return integerPart + fractionalPart;
+            return integerPart + fractionalPart;
         }
 
-            private static long ParseIntegerPart(string input)
+        private static long ParseIntegerPart(string input)
+        {
+            var words = input.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            long total = 0;
+            long current = 0;
+            long lastMultiplier = 1;
+
+            foreach (var word in words)
             {
-                var words = input.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-                long total = 0;
-                long current = 0;
-                long lastMultiplier = 1;
-
-                foreach (var word in words)
+                if (Hundreds.TryGetValue(word, out long hundred))
                 {
-                    if (Hundreds.TryGetValue(word, out long hundred))
-                    {
-                        current += hundred;
-                    }
-                    else if (Tens.TryGetValue(word, out long ten))
-                    {
-                        current += ten;
-                    }
-                    else if (Units.TryGetValue(word, out long unit))
-                    {
-                        current += unit;
-                    }
-                    else if (Multipliers.TryGetValue(word, out long multiplier))
-                    {
-                        if (current == 0)
-                            current = 1;
-
-                        current *= multiplier;
-
-                        total += current;
-                        current = 0;
-                        lastMultiplier = multiplier;
-                    }
-                    else
-                    {
-                        throw new FormatException($"Неизвестное слово: {word}");
-                    }
+                    current += hundred;
                 }
+                else if (Tens.TryGetValue(word, out long ten))
+                {
+                    current += ten;
+                }
+                else if (Units.TryGetValue(word, out long unit))
+                {
+                    current += unit;
+                }
+                else if (Multipliers.TryGetValue(word, out long multiplier))
+                {
+                    if (current == 0)
+                        current = 1;
 
-                total += current;
+                    current *= multiplier;
 
-                return total;
+                    total += current;
+                    current = 0;
+                    lastMultiplier = multiplier;
+                }
+                else
+                {
+                    throw new FormatException($"Неизвестное слово: {word}");
+                }
+            }
+
+            total += current;
+
+            return total;
         }
     }
 }

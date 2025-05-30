@@ -10,13 +10,13 @@ namespace SpeechRecognision
     {
         public static Dictionary<String, String> wordToCode = new Dictionary<string, string> { };
 
-        List sortedKeys = new List<String>();
+        private static IOrderedEnumerable<string> sortedKeys = wordToCode.Keys.OrderByDescending(k => k.Length);
 
         public static string decode(string input)
         {
             // Сортируем ключи по убыванию длины
-            if (sortedKeys.Count == 0 || sortedKeys.Count != wordToCode.Keys.Count)
-            { 
+            if (sortedKeys.Count() == 0 || sortedKeys.Count() != wordToCode.Keys.Count)
+            {
                 sortedKeys = wordToCode.Keys.OrderByDescending(k => k.Length);
             }
 
